@@ -1,9 +1,9 @@
-﻿import { element } from '../utils/dom.js';
-import { createUserCard } from './user-card.js';
+﻿import { element } from "../utils/dom.js";
+import { createUserCard } from "./user-card.js";
 
 export function createUserList() {
-  const grid = element('section', 'user-grid');
-  grid.setAttribute('aria-label', 'Users and posts');
+  const grid = element("section", "user-grid");
+  grid.setAttribute("aria-label", "Users and posts");
   return grid;
 }
 

@@ -57,9 +57,7 @@ function requestFailure(error, fallback) {
 export async function getGraphqlUsers() {
   const ids = Array.from({ length: 10 }, (_, index) => index + 1);
   const userResults = await Promise.allSettled(
-    ids.map((id) =>
-      runQuery(USER_QUERY, id, `User ${id} — user query`),
-    ),
+    ids.map((id) => runQuery(USER_QUERY, id, `User ${id} — user query`)),
   );
   const records = [];
   const errors = [];
@@ -101,11 +99,7 @@ export async function getGraphqlUsers() {
   const validUserIds = [...usersById.keys()];
   const postResults = await Promise.allSettled(
     validUserIds.map((id) =>
-      runQuery(
-        USER_POSTS_QUERY,
-        id,
-        `User ${id} — related posts`,
-      ),
+      runQuery(USER_POSTS_QUERY, id, `User ${id} — related posts`),
     ),
   );
 
