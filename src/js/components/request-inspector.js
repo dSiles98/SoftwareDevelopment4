@@ -9,7 +9,7 @@ export function renderRequestInspector(host, records = []) {
     card.open = index === 0;
     const summary = element('summary', 'cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-800');
     const method = record.request?.method || 'HTTP';
-    const status = record.response?.status ? ` · HTTP ${record.response.status}` : ' · Error de red';
+    const status = record.response ? ` · HTTP ${record.response.status}` : ' · Error de red';
     summary.textContent = `${method} ${shortUrl(record.request?.url || '')}${status} · ${formatDuration(record.duration || 0)}`;
     const body = element('div', 'space-y-3 border-t border-slate-100 p-4');
     if (record.label) body.append(element('p', 'rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600', record.label));

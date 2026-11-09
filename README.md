@@ -80,8 +80,8 @@ Se solicitan exactamente los endpoints requeridos:
 
 ```js
 const [usersResult, postsResult] = await Promise.all([
-  getResource('/users', forceNetwork),
-  getResource('/posts', forceNetwork),
+  getResource("/users", forceNetwork),
+  getResource("/posts", forceNetwork),
 ]);
 
 const userPosts = postsResult.data.filter(
@@ -89,7 +89,7 @@ const userPosts = postsResult.data.filter(
 );
 ```
 
-La relación ocurre en el navegador por `userId`; no se realizan solicitudes por usuario ni rutas adicionales. El inspector muestra los dos GET y sus respuestas. Ambos resultados se guardan independientemente en memoria durante un minuto, y la vista informa si se usó red o caché local.
+La relación ocurre en el navegador por `userId`; no se realizan solicitudes por usuario ni rutas adicionales. El inspector muestra los dos GET y sus respuestas. Ambos resultados se guardan independientemente en memoria durante un minuto, y la vista informa si se usó red o caché local. Las dos operaciones se esperan con `Promise.allSettled` para conservar en el inspector también la respuesta de la petición que sí terminó si la otra falla; los datos se presentan cuando ambas tienen éxito.
 
 ## Integración GraphQL
 
@@ -101,7 +101,12 @@ query UserById($id: ID!) {
     id
     username
     email
-    address { geo { lat lng } }
+    address {
+      geo {
+        lat
+        lng
+      }
+    }
   }
 }
 ```
@@ -114,7 +119,7 @@ Cada bloque separa la solicitud de la respuesta. Registra método, URL, headers 
 
 `Accept` expresa el formato aceptado; `Content-Type` declara el formato del cuerpo enviado. GraphQL lleva `application/json`, query y variables. El inspector incluye un campo conceptual `Authorization` que aclara que no se envía ni se usan credenciales. `Origin` lo controla el navegador. `Access-Control-Allow-Origin` y otros headers CORS son respuestas del servidor. JavaScript puede leer headers de respuesta expuestos por CORS; otros pueden seguir visibles en DevTools. Se muestran los valores efectivamente observados, no ejemplos como si fueran respuestas reales. Los headers de solicitud administrados por el navegador no siempre están disponibles a través de Fetch.
 
-`Cache-Control`, `ETag` e `If-None-Match` son relevantes para caché HTTP. El inspector permite observar lo que el servicio entregue; esta aplicación no inventa una respuesta `304 Not Modified` ni añade una petición condicional si el servidor no la ofrece.
+`Cache-Control`, `ETag` e `If-None-Match` son relevantes para caché HTTP. Fetch conserva el modo de caché predeterminado del navegador, y la caché en memoria de la aplicación es una capa independiente. El inspector permite observar lo que el servicio entregue; esta aplicación no inventa una respuesta `304 Not Modified` ni añade una petición condicional si el servidor no la ofrece.
 
 En la tabla REST/GraphQL del panel educativo, la relación usuario-publicaciones aparece explícitamente como filtrado JavaScript por `userId` frente a la relación `user.posts` resuelta por el servidor. Las dos peticiones REST también se etiquetan como solicitud 1 de 2 (usuarios) y 2 de 2 (publicaciones) dentro del inspector.
 
@@ -122,13 +127,13 @@ En la tabla REST/GraphQL del panel educativo, la relación usuario-publicaciones
 
 Seguro significa que el método está pensado para lectura sin pedir cambios en el estado del servidor. Idempotente significa que repetir una solicitud idéntica produce el mismo efecto final previsto, aunque la respuesta pueda variar.
 
-| Método | Seguro | Idempotente | Ejemplo conceptual |
-| --- | --- | --- | --- |
-| GET | Sí | Sí | Leer `/users` o `/posts` |
-| POST | No | Generalmente no | Crear un recurso o enviar una operación GraphQL de lectura |
-| PUT | No | Sí | Reemplazar el recurso completo en `/users/1` |
-| PATCH | No | Generalmente no | Modificar campos concretos de `/users/1` |
-| DELETE | No | Sí | Eliminar `/users/1` |
+| Método | Seguro | Idempotente     | Ejemplo conceptual                                         |
+| ------ | ------ | --------------- | ---------------------------------------------------------- |
+| GET    | Sí     | Sí              | Leer `/users` o `/posts`                                   |
+| POST   | No     | Generalmente no | Crear un recurso o enviar una operación GraphQL de lectura |
+| PUT    | No     | Sí              | Reemplazar el recurso completo en `/users/1`               |
+| PATCH  | No     | Generalmente no | Modificar campos concretos de `/users/1`                   |
+| DELETE | No     | Sí              | Eliminar `/users/1`                                        |
 
 PUT expresa reemplazo completo y PATCH modificación parcial. Esta demostración solo usa GET para REST y POST para las consultas GraphQL; no ejecuta operaciones de escritura.
 
@@ -164,7 +169,7 @@ Esto no es la caché HTTP del navegador. `Cache-Control` puede definir política
 Los datos de API se crean con `createElement` y `textContent`, no se interpolan como HTML. Por ejemplo:
 
 ```js
-const title = document.createElement('p');
+const title = document.createElement("p");
 title.textContent = post.title;
 list.append(title);
 ```
@@ -175,15 +180,14 @@ La estructura usa `header`, `nav`, `main`, `section`, `article`, `footer` y cont
 
 ## Promises, async/await y Event Loop
 
-Las funciones de las vistas usan `async/await` y `try/catch` para expresar claramente estados de carga y errores. `Promise.all` permite esperar las dos peticiones REST independientes, pero rechaza si una falla. `Promise.allSettled` en GraphQL conserva los resultados que sí llegaron aunque una consulta individual falle. El cliente HTTP mantiene un solo estilo asíncrono por flujo.
+Las funciones de las vistas usan `async/await` y `try/catch` para expresar claramente estados de carga y errores. `Promise.allSettled` espera ambas peticiones REST y permite conservar la inspección de la solicitud exitosa si la otra falla; los datos solo se muestran cuando ambas terminan correctamente. En GraphQL conserva resultados y errores parciales entre consultas individuales. El cliente HTTP mantiene un solo estilo asíncrono por flujo.
 
 Demostración para consola:
 
 ```js
-console.log('síncrono');
-Promise.resolve().then(() => console.log('microtask'));
-setTimeout(() => console.log('tarea del navegador'), 0);
-// síncrono → microtask → tarea
+console.log("síncrono");
+Promise.resolve().then(() => console.log("microtask"));
+setTimeout(() => console.log("tarea del navegador"), 0);
 ```
 
 El Event Loop ejecuta el bloque síncrono actual, vacía la cola de microtasks (incluidas continuaciones de Promise) y después procesa tareas como temporizadores y eventos, con oportunidades de renderizado entre ciclos.

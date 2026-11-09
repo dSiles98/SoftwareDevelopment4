@@ -5,7 +5,8 @@ export function createUserList() {
   const grid = element('section', 'user-grid');
   grid.setAttribute('aria-label', 'Usuarios y publicaciones');
   grid.addEventListener('click', event => {
-    const button = event.target.closest('[data-action="toggle-posts"]');
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest('[data-action="toggle-posts"]');
     if (!button || !grid.contains(button)) return;
     const list = grid.querySelector(`#posts-${CSS.escape(button.dataset.userId)}`);
     if (!list) return;
