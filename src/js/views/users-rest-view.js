@@ -1,17 +1,16 @@
 import { getRestUsersAndPosts } from '../services/rest-api.js';
 import { showStatus } from '../components/status-message.js';
 
-export async function loadRestView({ status, onData, onError, isCurrent = () => true, forceNetwork = false }) {
-  showStatus(status, 'loading', 'Consultando usuarios y publicaciones en paralelo…');
+export async function loadRestView({ status, onData, isCurrent = () => true, forceNetwork = false }) {
+  showStatus(status, 'loading', 'Loading users and posts in parallel…');
   try {
     const result = await getRestUsersAndPosts({ forceNetwork });
     onData(result);
     if (!isCurrent()) return;
-    if (result.users.length) showStatus(status, 'success', `Se muestran ${result.users.length} usuarios. Procedencia: ${result.sources.map(source => source === 'memory' ? 'caché local' : 'red').join(' y ')}.`);
-    else showStatus(status, 'empty', 'La API no devolvió usuarios.');
+    if (result.users.length) showStatus(status, 'success', `Showing ${result.users.length} users. Source: ${result.sources.map(source => source === 'memory' ? 'local cache' : 'network').join(' and ')}.`);
+    else showStatus(status, 'empty', 'The API returned no users.');
   } catch (error) {
     if (!isCurrent()) return;
-    onError(error.records || (error.record ? [error.record] : []));
-    showStatus(status, 'error', `${error.message} Verifica la conexión e inténtalo de nuevo.`);
+    showStatus(status, 'error', `${error.message} Check your connection and try again.`);
   }
 }

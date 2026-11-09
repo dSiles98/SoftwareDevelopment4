@@ -1,4 +1,4 @@
-const entries = new Map();
+﻿const entries = new Map();
 
 export function readCache(key) {
   const entry = entries.get(key);

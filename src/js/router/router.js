@@ -1,4 +1,4 @@
-const routes = new Map([
+﻿const routes = new Map([
   ['/users/rest', 'rest'],
   ['/users/graphql', 'graphql'],
 ]);

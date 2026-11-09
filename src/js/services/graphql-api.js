@@ -1,4 +1,4 @@
-import { request } from "./http-client.js";
+﻿import { request } from "./http-client.js";
 
 const ENDPOINT = "https://graphqlzero.almansi.me/api";
 const USER_QUERY = `query UserById($id: ID!) {
@@ -41,7 +41,7 @@ async function runQuery(query, id, label) {
   return {
     user: result.data?.data?.user,
     errors: (result.data?.errors ?? []).map(
-      (item) => item.message || "Error GraphQL sin mensaje.",
+      (item) => item.message || "GraphQL error without a message.",
     ),
     record: result.record,
   };
@@ -58,7 +58,7 @@ export async function getGraphqlUsers() {
   const ids = Array.from({ length: 10 }, (_, index) => index + 1);
   const userResults = await Promise.allSettled(
     ids.map((id) =>
-      runQuery(USER_QUERY, id, `Usuario ${id} — consulta de usuario`),
+      runQuery(USER_QUERY, id, `User ${id} — user query`),
     ),
   );
   const records = [];
@@ -71,20 +71,20 @@ export async function getGraphqlUsers() {
     if (result.status === "rejected") {
       const failure = requestFailure(
         result.reason,
-        `No se pudo consultar el usuario ${id}.`,
+        `Could not query user ${id}.`,
       );
       if (failure.record) records.push(failure.record);
-      errors.push(`Usuario ${id}: ${failure.error}`);
+      errors.push(`User ${id}: ${failure.error}`);
       return;
     }
     const response = result.value.user;
     records.push(result.value.record);
     result.value.errors.forEach((message) =>
-      errors.push(`Usuario ${id}: ${message}`),
+      errors.push(`User ${id}: ${message}`),
     );
     if (response?.id == null) {
       if (!result.value.errors.length)
-        errors.push(`Usuario ${id}: GraphQLZero no devolvió ese usuario.`);
+        errors.push(`User ${id}: GraphQLZero did not return this user.`);
       return;
     }
     const user = {
@@ -104,7 +104,7 @@ export async function getGraphqlUsers() {
       runQuery(
         USER_POSTS_QUERY,
         id,
-        `Usuario ${id} — publicaciones relacionadas`,
+        `User ${id} — related posts`,
       ),
     ),
   );
@@ -114,16 +114,16 @@ export async function getGraphqlUsers() {
     if (result.status === "rejected") {
       const failure = requestFailure(
         result.reason,
-        `No se pudieron consultar las publicaciones del usuario ${id}.`,
+        `Could not query posts for user ${id}.`,
       );
       if (failure.record) records.push(failure.record);
-      errors.push(`Publicaciones del usuario ${id}: ${failure.error}`);
+      errors.push(`Posts for user ${id}: ${failure.error}`);
       return;
     }
     const user = usersById.get(id);
     records.push(result.value.record);
     result.value.errors.forEach((message) =>
-      errors.push(`Publicaciones del usuario ${id}: ${message}`),
+      errors.push(`Posts for user ${id}: ${message}`),
     );
     user.posts = (result.value.user?.posts?.data ?? []).map((post) => ({
       id: Number(post.id),

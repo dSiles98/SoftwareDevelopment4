@@ -1,4 +1,4 @@
-export async function request({ url, method = 'GET', headers = {}, body, cache, signal }) {
+﻿export async function request({ url, method = 'GET', headers = {}, body, cache, signal }) {
   const startedAt = performance.now();
   const requestRecord = { method, url, headers: { ...headers }, body: body ?? null };
   try {
@@ -8,14 +8,14 @@ export async function request({ url, method = 'GET', headers = {}, body, cache, 
     try { data = raw ? JSON.parse(raw) : null; }
     catch (cause) {
       const record = { request: requestRecord, response: responseDetails(response, raw), duration: performance.now() - startedAt };
-      throw Object.assign(new Error('La respuesta no contiene JSON válido.'), { cause, record });
+      throw Object.assign(new Error('The response is not valid JSON.'), { cause, record });
     }
     const record = { request: requestRecord, response: responseDetails(response, data), duration: performance.now() - startedAt };
-    if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}: ${response.statusText || 'respuesta no exitosa'}`), { record });
+    if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}: ${response.statusText || 'unsuccessful response'}`), { record });
     return { data, record };
   } catch (error) {
     if (error.record) throw error;
-    const message = error.name === 'AbortError' ? 'La solicitud fue cancelada.' : error.message || 'Error de red al contactar el servicio.';
+    const message = error.name === 'AbortError' ? 'The request was cancelled.' : error.message || 'Network error while contacting the service.';
     throw Object.assign(new Error(message), { record: { request: requestRecord, response: null, duration: performance.now() - startedAt }, cause: error });
   }
 }

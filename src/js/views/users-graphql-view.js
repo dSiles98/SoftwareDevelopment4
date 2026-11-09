@@ -1,19 +1,31 @@
-import { getGraphqlUsers } from '../services/graphql-api.js';
-import { showStatus } from '../components/status-message.js';
+import { getGraphqlUsers } from "../services/graphql-api.js";
+import { showStatus } from "../components/status-message.js";
 
-export async function loadGraphqlView({ status, onData, onError, isCurrent = () => true }) {
-  showStatus(status, 'loading', 'Consultando GraphQLZero para los usuarios 1–10…');
+export async function loadGraphqlView({
+  status,
+  onData,
+  isCurrent = () => true,
+}) {
+  showStatus(status, "loading", "Querying GraphQLZero for users 1–10…");
   try {
     const result = await getGraphqlUsers();
     if (!isCurrent()) return;
     onData(result);
     if (result.errors.length) {
-      showStatus(status, result.users.length ? 'success' : 'error', `${result.users.length} usuarios cargados. Errores parciales: ${result.errors.join(' · ')}`);
-    } else if (result.users.length) showStatus(status, 'success', `Se muestran ${result.users.length} usuarios; cada respuesta incluye su relación posts.`);
-    else showStatus(status, 'empty', 'GraphQLZero no devolvió usuarios.');
+      showStatus(
+        status,
+        result.users.length ? "success" : "error",
+        `${result.users.length} users loaded. Partial errors: ${result.errors.join(" · ")}`,
+      );
+    } else if (result.users.length)
+      showStatus(status, "success", `Showing ${result.users.length} users`);
+    else showStatus(status, "empty", "GraphQLZero returned no users.");
   } catch (error) {
     if (!isCurrent()) return;
-    onError(error.record ? [error.record] : []);
-    showStatus(status, 'error', error.message || 'No se pudo completar la consulta GraphQL.');
+    showStatus(
+      status,
+      "error",
+      error.message || "The GraphQL query could not be completed.",
+    );
   }
 }

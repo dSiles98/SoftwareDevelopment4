@@ -1,20 +1,9 @@
-import { element } from '../utils/dom.js';
+﻿import { element } from '../utils/dom.js';
 import { createUserCard } from './user-card.js';
 
 export function createUserList() {
   const grid = element('section', 'user-grid');
-  grid.setAttribute('aria-label', 'Usuarios y publicaciones');
-  grid.addEventListener('click', event => {
-    const target = event.target instanceof Element ? event.target : null;
-    const button = target?.closest('[data-action="toggle-posts"]');
-    if (!button || !grid.contains(button)) return;
-    const list = grid.querySelector(`#posts-${CSS.escape(button.dataset.userId)}`);
-    if (!list) return;
-    const expanded = button.getAttribute('aria-expanded') === 'true';
-    button.setAttribute('aria-expanded', String(!expanded));
-    list.hidden = expanded;
-    button.textContent = expanded ? 'Mostrar publicaciones' : 'Ocultar publicaciones';
-  });
+  grid.setAttribute('aria-label', 'Users and posts');
   return grid;
 }
 

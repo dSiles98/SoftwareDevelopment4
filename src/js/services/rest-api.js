@@ -1,4 +1,4 @@
-import { request } from './http-client.js';
+﻿import { request } from './http-client.js';
 import { readCache, writeCache } from '../utils/cache.js';
 
 const BASE = 'https://jsonplaceholder.typicode.com';
@@ -11,7 +11,7 @@ async function getResource(path, forceNetwork) {
   }
   const result = await request({ url: key, headers: { Accept: 'application/json' } });
   if (!Array.isArray(result.data)) {
-    throw Object.assign(new Error(`La respuesta de ${path} no tiene el formato de lista esperado.`), { record: result.record });
+    throw Object.assign(new Error(`The response from ${path} is not in the expected list format.`), { record: result.record });
   }
   const stored = { ...result, source: 'network' };
   writeCache(key, stored);
@@ -23,7 +23,7 @@ export async function getRestUsersAndPosts({ forceNetwork = false } = {}) {
     getResource('/users', forceNetwork),
     getResource('/posts', forceNetwork),
   ]);
-  const requestLabels = ['Solicitud 1 de 2 — Usuarios', 'Solicitud 2 de 2 — Publicaciones'];
+  const requestLabels = ['Request 1 of 2 — Users', 'Request 2 of 2 — Posts'];
   const records = settled.flatMap((result, index) => {
     const record = result.status === 'fulfilled' ? result.value.record : result.reason?.record;
     if (!record) return [];
@@ -33,7 +33,7 @@ export async function getRestUsersAndPosts({ forceNetwork = false } = {}) {
   const failure = settled.find(result => result.status === 'rejected');
   if (failure) {
     const cause = failure.reason;
-    throw Object.assign(new Error(cause?.message || 'No se pudieron cargar usuarios y publicaciones.'), {
+    throw Object.assign(new Error(cause?.message || 'Could not load users and posts.'), {
       record: cause?.record,
       records,
       cause,
