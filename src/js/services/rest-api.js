@@ -25,5 +25,7 @@ export async function getRestUsersAndPosts({ forceNetwork = false } = {}) {
     geo: user.address?.geo ? { lat: user.address.geo.lat, lng: user.address.geo.lng } : null,
     posts: postsResult.data.filter(post => Number(post.userId) === Number(user.id)).map(post => ({ id: Number(post.id), title: post.title, body: post.body })),
   }));
+  usersResult.record.label = 'Solicitud 1 de 2 — Usuarios';
+  postsResult.record.label = 'Solicitud 2 de 2 — Publicaciones';
   return { users, records: [usersResult.record, postsResult.record], sources: [usersResult.source, postsResult.source] };
 }

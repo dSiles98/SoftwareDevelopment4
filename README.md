@@ -41,6 +41,11 @@ src/
     main.js
     router/router.js
     components/
+      app-header.js
+      navigation.js
+      post-item.js
+      post-list.js
+      user-card.js
       comparison-panel.js
       request-inspector.js
       status-message.js
@@ -88,29 +93,30 @@ La relación ocurre en el navegador por `userId`; no se realizan solicitudes por
 
 ## Integración GraphQL
 
-El cliente usa `https://graphqlzero.almansi.me/api` y envía una operación POST por cada usuario entre 1 y 10. Los IDs se pasan en `variables`, nunca concatenados en el texto de la consulta. Cada operación selecciona los campos de usuario, coordenadas y la relación de publicaciones:
+El cliente usa `https://graphqlzero.almansi.me/api` y primero envía una operación POST por cada usuario entre 1 y 10. Luego envía una operación para las publicaciones relacionadas de cada usuario válido. Los IDs se pasan en `variables`, nunca concatenados en el texto de la consulta. Las fases ejecutan sus operaciones independientes de forma concurrente con `Promise.allSettled`, para comunicar errores parciales sin perder los resultados correctos.
 
 ```graphql
-query UserWithPosts($id: ID!) {
+query UserById($id: ID!) {
   user(id: $id) {
     id
     username
     email
     address { geo { lat lng } }
-    posts { data { id title } }
   }
 }
 ```
 
-Las diez operaciones independientes se ejecutan con `Promise.allSettled`. Un fallo de un usuario se comunica como error parcial; los demás pueden mostrarse. También se comprueba la propiedad `errors` de GraphQL aunque el status HTTP sea exitoso. La relación `user.posts` deja el filtrado en el servidor, por lo que no se descargan todas las publicaciones para filtrarlas en JavaScript. El inspector conserva query, variables, headers, status, duración y cuerpo recibido para cada consulta.
+La consulta de publicaciones usa `query UserPostsById($id: ID!) { user(id: $id) { posts { data { id title } } } }`. Se pueden observar hasta veinte operaciones (diez de usuarios y diez de publicaciones). Un fallo individual se comunica como error parcial; los demás resultados pueden mostrarse. También se comprueba la propiedad `errors` de GraphQL aunque el status HTTP sea exitoso. La relación `user.posts` deja el filtrado en el servidor, por lo que no se descargan todas las publicaciones para filtrarlas en JavaScript. El inspector conserva query, variables, headers, status, duración y cuerpo recibido para cada consulta.
 
 ## Request Inspector y headers
 
 Cada bloque separa la solicitud de la respuesta. Registra método, URL, headers declarados por esta aplicación, body si existe, status HTTP, tiempo, headers de respuesta que `fetch` permite leer y response body.
 
-`Accept` expresa el formato aceptado; `Content-Type` declara el formato del cuerpo enviado. GraphQL lleva `application/json`, query y variables. La interfaz no envía un `Authorization` ficticio. `Origin` lo controla el navegador. `Access-Control-Allow-Origin` y otros headers CORS son respuestas del servidor. JavaScript puede leer headers de respuesta expuestos por CORS; otros pueden seguir visibles en DevTools. Se muestran los valores efectivamente observados, no ejemplos como si fueran respuestas reales. Los headers de solicitud administrados por el navegador no siempre están disponibles a través de Fetch.
+`Accept` expresa el formato aceptado; `Content-Type` declara el formato del cuerpo enviado. GraphQL lleva `application/json`, query y variables. El inspector incluye un campo conceptual `Authorization` que aclara que no se envía ni se usan credenciales. `Origin` lo controla el navegador. `Access-Control-Allow-Origin` y otros headers CORS son respuestas del servidor. JavaScript puede leer headers de respuesta expuestos por CORS; otros pueden seguir visibles en DevTools. Se muestran los valores efectivamente observados, no ejemplos como si fueran respuestas reales. Los headers de solicitud administrados por el navegador no siempre están disponibles a través de Fetch.
 
 `Cache-Control`, `ETag` e `If-None-Match` son relevantes para caché HTTP. El inspector permite observar lo que el servicio entregue; esta aplicación no inventa una respuesta `304 Not Modified` ni añade una petición condicional si el servidor no la ofrece.
+
+En la tabla REST/GraphQL del panel educativo, la relación usuario-publicaciones aparece explícitamente como filtrado JavaScript por `userId` frente a la relación `user.posts` resuelta por el servidor. Las dos peticiones REST también se etiquetan como solicitud 1 de 2 (usuarios) y 2 de 2 (publicaciones) dentro del inspector.
 
 ## Métodos HTTP, seguridad e idempotencia
 

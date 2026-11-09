@@ -12,10 +12,13 @@ export function renderRequestInspector(host, records = []) {
     const status = record.response?.status ? ` · HTTP ${record.response.status}` : ' · Error de red';
     summary.textContent = `${method} ${shortUrl(record.request?.url || '')}${status} · ${formatDuration(record.duration || 0)}`;
     const body = element('div', 'space-y-3 border-t border-slate-100 p-4');
+    if (record.label) body.append(element('p', 'rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600', record.label));
     const requestHeading = element('p', 'text-xs font-bold uppercase tracking-wide text-sky-700', 'Solicitud');
     body.append(requestHeading);
+    body.append(kv('Tiempo de respuesta', formatDuration(record.duration || 0)));
     body.append(kv('Método y URL', `${method} ${record.request?.url || ''}`));
     body.append(kv('Headers enviados', JSON.stringify(record.request?.headers || {}, null, 2)));
+    body.append(kv('Authorization (ejemplo conceptual)', 'No se envía en esta demo. No se usan credenciales.'));
     if (record.request?.body) body.append(kv('Request body (query y variables)', record.request.body));
     const responseHeading = element('p', 'mt-4 text-xs font-bold uppercase tracking-wide text-emerald-700', 'Respuesta');
     body.append(responseHeading);

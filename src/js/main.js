@@ -1,6 +1,7 @@
 import { element } from './utils/dom.js';
 import { clearCache } from './utils/cache.js';
 import { currentRoute, navigate, subscribeRoute } from './router/router.js';
+import { createAppHeader } from './components/app-header.js';
 import { createUserList, renderUsers } from './components/user-list.js';
 import { renderRequestInspector } from './components/request-inspector.js';
 import { createEducationSections } from './components/comparison-panel.js';
@@ -10,14 +11,7 @@ import { loadGraphqlView } from './views/users-graphql-view.js';
 
 const app = document.querySelector('#app');
 const shell = element('div', 'mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8');
-const header = element('header', 'flex flex-col gap-5 border-b border-slate-200 py-6 sm:flex-row sm:items-center sm:justify-between');
-const brand = element('a', 'flex items-center gap-3 rounded-lg', ''); brand.href = '/users/rest'; brand.dataset.route = '/users/rest'; brand.setAttribute('aria-label', 'Manage Users, inicio REST');
-const mark = element('span', 'grid h-11 w-11 place-items-center rounded-2xl bg-slate-900 text-sm font-black text-white', 'MU');
-const brandText = element('span'); brandText.append(element('span', 'block text-sm font-bold tracking-wide text-slate-900', 'MANAGE USERS'), element('span', 'block text-xs text-slate-500', 'REST · GraphQL · JavaScript'));
-brand.append(mark, brandText);
-const nav = element('nav', 'flex flex-wrap gap-2'); nav.setAttribute('aria-label', 'Navegación principal');
-const restLink = navLink('/users/rest', 'Users with REST'); const gqlLink = navLink('/users/graphql', 'Users with GraphQL'); nav.append(restLink, gqlLink);
-header.append(brand, nav);
+const { header, restLink, graphqlLink: gqlLink } = createAppHeader();
 
 const main = element('main', 'pt-8');
 const hero = element('section', 'mb-6 flex flex-col gap-5 rounded-3xl bg-slate-900 p-6 text-white sm:p-8 lg:flex-row lg:items-end lg:justify-between');
@@ -44,15 +38,14 @@ const footer = element('footer', 'mt-12 border-t border-slate-200 pt-6 text-xs l
 shell.append(header, main, footer); app.replaceChildren(shell);
 
 let activeController = 0;
-function navLink(path, label) {
-  const link = element('a', 'rounded-xl px-4 py-2.5 text-sm font-semibold transition'); link.href = path; link.dataset.route = path; link.textContent = label; return link;
-}
 function routeClick(event) {
   const link = event.target.closest('a[data-route]');
   if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault(); navigate(link.dataset.route);
 }
 app.addEventListener('click', routeClick);
+// Suscribirse antes del primer render garantiza que Atrás/Adelante funcione
+// también al abrir directamente una ruta profunda.
 subscribeRoute(() => renderRoute());
 refreshButton.addEventListener('click', () => renderRoute(true));
 clearButton.addEventListener('click', () => { clearCache(); renderRoute(false, 'Caché en memoria invalidada.'); });
@@ -65,7 +58,7 @@ async function renderRoute(forceNetwork = false, notice = '') {
   restLink.className = linkClasses(!isGraphql); gqlLink.className = linkClasses(isGraphql);
   restLink.setAttribute('aria-current', !isGraphql ? 'page' : 'false'); gqlLink.setAttribute('aria-current', isGraphql ? 'page' : 'false');
   title.textContent = isGraphql ? 'Users with GraphQL' : 'Users with REST';
-  description.textContent = isGraphql ? 'Diez consultas parametrizadas consultan usuarios y su relación de publicaciones en GraphQLZero.' : 'Dos solicitudes GET independientes recuperan usuarios y publicaciones; el navegador los relaciona con userId.';
+  description.textContent = isGraphql ? 'Consultas parametrizadas en dos fases obtienen los usuarios y sus publicaciones relacionadas mediante GraphQLZero.' : 'Dos solicitudes GET independientes recuperan usuarios y publicaciones; el navegador los relaciona con userId.';
   serviceBadge.replaceChildren(element('span', `status-dot ${isGraphql ? 'bg-violet-500' : 'bg-emerald-500'}`), document.createTextNode(isGraphql ? 'GraphQLZero · Fetch POST' : 'JSONPlaceholder · Fetch GET'));
   users.replaceChildren(); renderRequestInspector(inspector, []);
   if (notice) showStatus(status, 'success', notice);
