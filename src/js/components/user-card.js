@@ -17,7 +17,7 @@ export function createUserCard(user) {
   top.append(
     element(
       "h3",
-      "text-lg font-bold text-neutral-900",
+      "font-bold text-neutral-900",
       user.name || user.username || "Name unavailable",
     ),
   );
